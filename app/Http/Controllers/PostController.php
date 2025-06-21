@@ -11,12 +11,17 @@ class PostController extends Controller
 {
     public function index()
     {
-        $posts = Post::where('status', 'published')
-            ->latest()
-            ->get();
+        $posts = Post::where('status', 'published')->latest()->paginate(10);
 
-        return Inertia::render('Pages/Blog/Index', [
+        return Inertia::render('frontend/blog/index', [
             'posts' => $posts,
+        ]);
+    }
+
+    public function show(Post $post)
+    {
+        return Inertia::render('frontend/blog/show', [
+            'post' => $post
         ]);
     }
 }

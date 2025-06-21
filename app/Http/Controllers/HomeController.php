@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+use App\Models\Post;
+
 class HomeController extends Controller
 {
     public function index()
@@ -42,8 +44,14 @@ class HomeController extends Controller
             ],
         ];
 
+        $posts = Post::where('status', 'published')
+            ->latest()
+            ->take(3)
+            ->get();
+
         $data = [
             'features' => $features,
+            'posts' => $posts,
         ];
 
         return Inertia::render('frontend/welcome', $data);

@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::get('/blog', [PostController::class, 'index'])->name('posts.index');
+Route::get('/blog/{post:slug}', [PostController::class, 'show'])->name('posts.show');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
