@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+@plugin 'tailwindcss-animate';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@plugin 'daisyui' {
+    themes:
+        cupcake --default,
+        night --prefersdark;
+}
