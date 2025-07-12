@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Providers\RouteServiceProvider;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -33,7 +34,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if (Auth::user()->role === 'admin') {
+            // Jika yang login adalah admin...
+            // Arahkan dia ke rute yang bernama 'admin.dashboard'
+            return redirect()->route('admin.dashboard');
+        }
+
+        // 4. Jika bukan admin (user biasa)...
+        // Biarkan dia pergi ke tujuan default seperti biasa
+        return redirect()->intended(RouteServiceProvider::HOME);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\Backend\UserController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -9,10 +10,20 @@ use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+Route::middleware(['auth', 'verified', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('backend/dashboard');
     })->name('dashboard');
+
+    Route::get('/posts', [PostController::class, 'adminIndex'])->name('posts.index');
+    Route::get('/posts/data', [PostController::class, 'getData'])->name('posts.data');
+    Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
+    Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+
+    Route::resource('users', UserController::class);
 });
 
 Route::get('/blog', [PostController::class, 'index'])->name('posts.index');
