@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Category;
+use App\Models\Tag;       // <-- Import
 
 use Inertia\Inertia;
 use Illuminate\Http\Request;
@@ -73,7 +75,10 @@ class PostController extends Controller
     public function create()
     {
         // Method ini hanya menampilkan halaman form create
-        return Inertia::render('backend/blog/create');
+        return Inertia::render('backend/blog/create', [
+            'categories' => Category::all(),
+            'tags' => Tag::all(), // Kirim semua kategori
+        ]);
     }
 
     public function store(Request $request)
@@ -84,6 +89,9 @@ class PostController extends Controller
             'status' => 'required|in:published,draft,archived',
             'body' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'category_id' => 'nullable|exists:categories,id', // <-- Tambahkan ini
+            'tags' => 'nullable|array', // <-- Validasi untuk tags
+            'tags.*' => 'exists:tags,id' // <-- Pastikan semua ID tag valid
         ]);
 
         // 2. Siapkan data untuk disimpan
@@ -98,7 +106,11 @@ class PostController extends Controller
         }
 
         // 4. Simpan ke database
-        Post::create($dataToStore);
+        $post = Post::create($dataToStore);
+
+        if ($request->filled('tags')) {
+            $post->tags()->sync($request->tags);
+        }
 
         // 5. Arahkan kembali ke halaman index dengan pesan sukses
         return redirect()->route('admin.posts.index')->with('message', 'Post baru berhasil dibuat!');
@@ -108,7 +120,9 @@ class PostController extends Controller
     {
         // Kirim data post yang akan diedit ke komponen 'Backend/Blog/Edit'
         return Inertia::render('backend/blog/edit', [
-            'post' => $post,
+            'post' => $post->load('category', 'tags'),
+            'categories' => Category::all(),
+            'tags' => Tag::all(),
         ]);
     }
 
@@ -120,6 +134,7 @@ class PostController extends Controller
             'status' => 'required|in:published,draft,archived',
             'body' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'category_id' => 'nullable|exists:categories,id',
         ]);
 
         // 2. Siapkan data untuk di-update
@@ -138,6 +153,8 @@ class PostController extends Controller
 
         // 4. Update data di database
         $post->update($dataToUpdate);
+
+        $post->tags()->sync($request->input('tags', []));
 
         // 5. Arahkan kembali dengan pesan sukses
         return redirect()->route('admin.posts.index')->with('message', 'Post berhasil diperbarui!');

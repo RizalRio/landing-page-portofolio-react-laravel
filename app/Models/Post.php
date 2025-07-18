@@ -24,6 +24,7 @@ class Post extends Model
         'body',
         'status',
         'published_at',
+        'category_id',
     ];
 
     /**
@@ -34,5 +35,16 @@ class Post extends Model
     {
         // Laravel akan secara otomatis mencari foreign key 'user_id' di tabel posts.
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function tags()
+    {
+        // Satu post BISA MEMILIKI BANYAK tag
+        return $this->belongsToMany(Tag::class);
     }
 }

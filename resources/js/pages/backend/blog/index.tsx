@@ -74,30 +74,30 @@ export default function Index({ posts, filters }: { posts: PostPaginator; filter
         );
     };
 
-    // !! INI LOGIKA BARUNYA: useEffect untuk debounce !!
     useEffect(() => {
-        // Buat timer
-        const debounce = setTimeout(() => {
-            // Kirim request ke server dengan search term yang baru
-            router.get(
-                route('admin.posts.index'),
-                {
-                    // Sertakan semua filter yang ada
-                    search: searchTerm,
-                    sort_by: filters.sort_by,
-                    sort_direction: filters.sort_direction,
-                },
-                {
-                    preserveState: true,
-                    replace: true,
-                },
-            );
-        }, 300); // Tunggu 300ms setelah user berhenti mengetik
+        // Hanya jalankan pencarian jika nilai input berbeda dari filter di URL
+        // Ini mencegah useEffect berjalan setelah paginasi
+        if (searchTerm !== (filters.search || '')) {
+            const debounce = setTimeout(() => {
+                router.get(
+                    route('admin.posts.index'),
+                    {
+                        search: searchTerm,
+                        sort_by: filters.sort_by,
+                        sort_direction: filters.sort_direction,
+                    },
+                    {
+                        preserveState: true,
+                        replace: true,
+                    },
+                );
+            }, 300);
 
-        // Bersihkan timer jika user mengetik lagi sebelum 300ms
-        return () => clearTimeout(debounce);
-    }, [searchTerm]); // Jalankan efek ini setiap kali 'searchTerm' berubah
+            return () => clearTimeout(debounce);
+        }
+    }, [searchTerm]); // useEffect tetap hanya bergantung pada searchTerm
 
+    // Fungsi untuk mengupdate state saat user mengetik
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(event.target.value);
     };

@@ -9,6 +9,7 @@ use App\Models\User; // <-- Pakai model User
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -71,5 +72,68 @@ class UserController extends Controller
 
         // Arahkan kembali dengan pesan sukses
         return redirect()->route('admin.users.index')->with('message', 'User baru berhasil dibuat.');
+    }
+
+    /**
+     * Menampilkan form untuk mengedit user.
+     */
+    public function edit(User $user)
+    {
+        // Kirim data user yang akan diedit ke view
+        return Inertia::render('backend/users/edit', [
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * Mengupdate data user di database.
+     */
+    public function update(Request $request, User $user)
+    {
+        // Validasi input
+        $request->validate([
+            'name' => 'required|string|max:255',
+            // Pastikan email unik, KECUALI untuk user ini sendiri
+            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'role' => 'required|in:admin,user',
+            // Password bersifat opsional saat update
+            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        // Siapkan data untuk diupdate
+        $dataToUpdate = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'role' => $request->role,
+        ];
+
+        // Hanya update password jika diisi
+        if ($request->filled('password')) {
+            $dataToUpdate['password'] = Hash::make($request->password);
+        }
+
+        // Update data di database
+        $user->update($dataToUpdate);
+
+        // Arahkan kembali dengan pesan sukses
+        return redirect()->route('admin.users.index')->with('message', 'Data user berhasil diperbarui.');
+    }
+
+    /**
+     * Menghapus user dari database.
+     */
+    public function destroy(User $user)
+    {
+        // PENGAMAN PENTING: Cek apakah user mencoba menghapus dirinya sendiri.
+        if ($user->id === auth()->id()) {
+            // Jika ya, kembalikan dengan pesan error.
+            return redirect()->back()->withErrors(['error' => 'Anda tidak bisa menghapus akun Anda sendiri.']);
+        }
+
+        // Jika bukan diri sendiri, lanjutkan proses hapus.
+        $user->delete();
+
+        // Arahkan kembali dengan pesan sukses.
+        return redirect()->route('admin.users.index')->with('message', 'User berhasil dihapus.');
     }
 }

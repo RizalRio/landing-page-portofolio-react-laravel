@@ -1,6 +1,7 @@
 // resources/js/Pages/Backend/Blog/Create.tsx
 
 import AdminLayout from '@/layouts/backend/admin-layout';
+import { PageProps } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -51,14 +52,26 @@ const MenuBar = ({ editor }: { editor: any }) => {
     );
 };
 
+interface Category {
+    id: number;
+    name: string;
+}
+
+interface Tag {
+    id: number;
+    name: string;
+}
+
 // Komponen utama halaman Create
-export default function Create() {
+export default function Create({ categories, tags }: PageProps<{ categories: Category[]; tags: Tag[] }>) {
     // Hook useForm dari Inertia untuk menangani state form, error, dan submission
     const { data, setData, post, processing, errors } = useForm({
         title: '',
         status: 'draft', // Nilai default untuk status
         body: '',
         image: null as File | null,
+        category_id: '', // <-- Tambahkan ini
+        tags: [] as number[], // Simpan ID tag yang dipilih
     });
 
     // Hook useEditor dari Tiptap untuk menginisialisasi editor
@@ -76,6 +89,18 @@ export default function Create() {
             setData('body', editor.getHTML());
         },
     });
+
+    function handleTagChange(tagId: number) {
+        const currentTags = data.tags;
+        if (currentTags.includes(tagId)) {
+            setData(
+                'tags',
+                currentTags.filter((id) => id !== tagId),
+            );
+        } else {
+            setData('tags', [...currentTags, tagId]);
+        }
+    }
 
     // Fungsi yang dijalankan saat form di-submit
     function handleSubmit(e: React.FormEvent) {
@@ -102,6 +127,45 @@ export default function Create() {
                             className={`input input-bordered w-full ${errors.title ? 'input-error' : ''}`}
                         />
                         {errors.title && <span className="text-error mt-1 text-xs">{errors.title}</span>}
+                    </div>
+
+                    <div className="form-control w-full">
+                        <label htmlFor="category_id" className="label mb-3">
+                            <span className="label-text font-semibold">Kategori</span>
+                        </label>
+                        <select
+                            id="category_id"
+                            value={data.category_id}
+                            onChange={(e) => setData('category_id', e.target.value)}
+                            className={`select select-bordered w-full ${errors.category_id ? 'select-error' : ''}`}
+                        >
+                            <option value="">Pilih Kategori</option>
+                            {categories.map((category) => (
+                                <option key={category.id} value={category.id}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.category_id && <span className="text-error mt-1 text-xs">{errors.category_id}</span>}
+                    </div>
+
+                    <div className="form-control w-full">
+                        <label className="label">
+                            <span className="label-text mb-3 font-semibold">Tags</span>
+                        </label>
+                        <div className="border-base-300 flex flex-wrap gap-4 rounded-lg border p-4">
+                            {tags.map((tag) => (
+                                <label key={tag.id} className="label cursor-pointer gap-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.tags.includes(tag.id)}
+                                        onChange={() => handleTagChange(tag.id)}
+                                        className="checkbox checkbox-primary"
+                                    />
+                                    <span className="label-text">{tag.name}</span>
+                                </label>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Body / Isi Post dengan Editor Tiptap */}

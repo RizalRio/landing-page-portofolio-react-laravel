@@ -113,6 +113,8 @@ export default function Index({ users, filters }: { users: UserPaginator; filter
                                             method="delete"
                                             as="button"
                                             className="btn btn-sm btn-error"
+                                            // Tambahkan konfirmasi sebelum request dikirim
+                                            onBefore={() => confirm('Apakah Anda yakin ingin menghapus user ini?')}
                                         >
                                             Hapus
                                         </Link>
